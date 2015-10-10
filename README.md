@@ -12,7 +12,7 @@ You need a slack token, so get one of those.
 You may need to set the bot's name in the src.
 
 ```
-docker run --privileged -e SLACK_TOKEN='' dis
+docker run --privileged -e SLACK_TOKEN='' dis/dis
 ```
 
 #examples
