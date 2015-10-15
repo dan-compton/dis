@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/mvdan/xurls"
 	"github.com/nlopes/slack"
 	"os"
 	"os/exec"
@@ -34,6 +35,19 @@ func lu(cmd string, rtm *slack.RTM, channel string) error {
 	return nil
 }
 
+func fixUrls(cmd string) string {
+	found := xurls.Strict.FindAllString(cmd, -1)
+
+	// for each url in the message, strip the <> slack added
+	for i := range found {
+		fmt.Printf("Found %s", found[i])
+		r, _ := regexp.Compile("<" + found[i] + ">")
+		cmd = r.ReplaceAllString(cmd, found[i])
+	}
+
+	return cmd
+}
+
 func main() {
 	api := slack.New(os.Getenv("SLACK_TOKEN"))
 	api.SetDebug(true)
@@ -50,14 +64,16 @@ Loop:
 			case *slack.MessageEvent:
 				messageText := ev.Text
 				channel := ev.Channel
-				fmt.Printf("Channel: %s\n", channel)
 
 				// is it addressed to the bot?
 				r, _ := regexp.Compile("^<@U0ASA381Z>:{0,1}")
 
 				if r.MatchString(messageText) {
 					cmd := r.ReplaceAllString(messageText, "")
+					cmd = fixUrls(cmd)
+					fmt.Printf("Command: %s\n", cmd)
 					err := lu(cmd, rtm, channel)
+
 					if err != nil {
 						fmt.Println(err)
 					}
